@@ -13,6 +13,10 @@ A simple Git worktree manager that creates worktrees in a consistent location al
 - **Simple Commands**: Easy-to-remember commands for common worktree operations
 - **Colored Output**: Clear, colored terminal output for better readability
 - **Git Integration**: Works seamlessly with existing Git repositories
+- **Quick Navigation**: Switch between worktrees with a simple command
+- **Status Overview**: View all worktrees and their states at a glance
+- **Batch Updates**: Pull latest changes from origin/main to all worktrees
+- **Smart Cleanup**: Automatically remove merged worktrees to keep workspace tidy
 
 ## How It Works
 
@@ -24,6 +28,12 @@ When you run `gwtr add feature-x` in a repository named `myproject`, it creates 
 
 ```bash
 cargo install gwtr
+```
+
+### From npm
+
+```bash
+npm install -g gwtr
 ```
 
 ### From Source
@@ -43,7 +53,23 @@ gwtr add feature-x
 # List all worktrees
 gwtr list
 
-# Remove a worktree
+# Switch to a worktree (shows cd command)
+gwtr switch feature-x
+
+# Show status of all worktrees
+gwtr status
+
+# Pull latest changes from origin/main
+gwtr pull --all           # All worktrees
+gwtr pull feature-x       # Specific worktree
+gwtr pull                 # Current worktree
+
+# Remove merged worktrees
+gwtr prune               # Interactive mode
+gwtr prune --dry-run     # Preview what would be removed
+gwtr prune --force       # Skip confirmation
+
+# Remove a specific worktree
 gwtr remove feature-x
 ```
 
@@ -58,6 +84,28 @@ $ gwtr list
 Worktrees:
   /Users/you/dev/myapp (main) [main]
   /Users/you/dev/myapp_new-feature [new-feature]
+
+$ gwtr switch new-feature
+cd /Users/you/dev/myapp_new-feature
+
+$ gwtr status
+Worktrees:
+  /Users/you/dev/myapp (main) [main] - clean
+  /Users/you/dev/myapp_new-feature [new-feature] - 2 uncommitted changes
+
+$ gwtr pull --all
+Pulling all worktrees from origin/main...
+  main [main]: Already up to date
+  myapp_new-feature [new-feature]: Updated
+
+$ gwtr prune
+Found 1 merged worktree to prune:
+  old-feature [old-feature] at /Users/you/dev/myapp_old-feature
+
+Prune these worktrees? [y/N] y
+Pruning old-feature... done
+
+Pruned 1 worktree
 
 $ gwtr remove new-feature
 Removed worktree 'new-feature' at "../myapp_new-feature"
