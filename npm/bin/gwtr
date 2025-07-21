@@ -22,7 +22,7 @@ function getBinaryPath() {
   const platformArch = `${platform}-${arch}`;
   
   // Try to find the binary in the platform-specific package
-  const packageName = `@gwtr/${platformArch}`;
+  const packageName = `gwtr-${platformArch}`;
   
   try {
     const packagePath = require.resolve(`${packageName}/package.json`);
