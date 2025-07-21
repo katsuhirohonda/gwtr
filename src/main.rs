@@ -49,10 +49,10 @@ fn run() -> Result<()> {
         Some(Commands::List) => {
             // Validate git repository
             let current_dir = env::current_dir()?;
-            let _repo = gwtr::ensure_git_repository(&current_dir)?;
+            let repo = gwtr::ensure_git_repository(&current_dir)?;
             
-            // Will implement later
-            println!("List command not yet implemented");
+            // List worktrees
+            gwtr::list_worktrees(&repo)?;
         }
         Some(Commands::Remove { name: _ }) => {
             // Validate git repository
