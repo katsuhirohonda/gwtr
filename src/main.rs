@@ -25,6 +25,11 @@ enum Commands {
         /// Name of the worktree to remove
         name: String,
     },
+    /// Switch to a worktree
+    Switch {
+        /// Name of the worktree to switch to
+        name: String,
+    },
 }
 
 fn main() {
@@ -61,6 +66,14 @@ fn run() -> Result<()> {
             
             // Remove worktree
             gwtr::remove_worktree(&repo, name)?;
+        }
+        Some(Commands::Switch { name }) => {
+            // Validate git repository
+            let current_dir = env::current_dir()?;
+            let repo = gwtr::ensure_git_repository(&current_dir)?;
+            
+            // Switch to worktree
+            gwtr::switch_to_worktree(&repo, name)?;
         }
         None => {
             // This shouldn't happen with arg_required_else_help
