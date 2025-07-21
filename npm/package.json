@@ -1,5 +1,5 @@
 {
-  "name": "gwtr",
+  "name": "@gwtr/gwtr",
   "version": "0.2.0",
   "description": "A simple Git worktree manager",
   "keywords": [
@@ -42,10 +42,10 @@
     "arm64"
   ],
   "optionalDependencies": {
-    "@gwtr/darwin-x64": "0.1.2",
-    "@gwtr/darwin-arm64": "0.1.2",
-    "@gwtr/linux-x64": "0.1.2",
-    "@gwtr/linux-arm64": "0.1.2",
-    "@gwtr/win32-x64": "0.1.2"
+    "@gwtr/darwin-x64": "0.2.0",
+    "@gwtr/darwin-arm64": "0.2.0",
+    "@gwtr/linux-x64": "0.2.0",
+    "@gwtr/linux-arm64": "0.2.0",
+    "@gwtr/win32-x64": "0.2.0"
   }
 }

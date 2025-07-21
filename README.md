@@ -33,7 +33,7 @@ cargo install gwtr
 ### From npm
 
 ```bash
-npm install -g gwtr
+npm install -g @gwtr/gwtr
 ```
 
 ### From Source
