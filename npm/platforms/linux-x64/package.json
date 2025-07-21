@@ -1,6 +1,6 @@
 {
   "name": "gwtr-linux-x64",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Linux x64 binary for gwtr",
   "repository": {
     "type": "git",
