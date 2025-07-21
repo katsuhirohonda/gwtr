@@ -40,6 +40,15 @@ enum Commands {
         /// Specific worktree name to pull (optional)
         name: Option<String>,
     },
+    /// Prune merged worktrees
+    Prune {
+        /// Show what would be pruned without actually removing
+        #[arg(long)]
+        dry_run: bool,
+        /// Skip confirmation prompt
+        #[arg(long, short)]
+        force: bool,
+    },
 }
 
 fn main() {
@@ -107,6 +116,14 @@ fn run() -> Result<()> {
                 // Pull current worktree
                 gwtr::pull_current_worktree(&repo)?;
             }
+        }
+        Some(Commands::Prune { dry_run, force }) => {
+            // Validate git repository
+            let current_dir = env::current_dir()?;
+            let repo = gwtr::ensure_git_repository(&current_dir)?;
+            
+            // Prune merged worktrees
+            gwtr::prune_merged_worktrees(&repo, *dry_run, *force)?;
         }
         None => {
             // This shouldn't happen with arg_required_else_help

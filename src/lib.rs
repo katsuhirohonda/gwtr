@@ -498,3 +498,168 @@ pub fn pull_current_worktree(repo: &Repository) -> Result<()> {
     
     Ok(())
 }
+
+/// Prune merged worktrees
+pub fn prune_merged_worktrees(repo: &Repository, dry_run: bool, force: bool) -> Result<()> {
+    use std::process::Command;
+    use std::io::{self, Write};
+    
+    let workdir = repo.workdir()
+        .context("Failed to get repository working directory")?;
+    let repo_name = get_repository_name(repo)?;
+    
+    // Get list of worktrees
+    let output = Command::new("git")
+        .args(&["worktree", "list", "--porcelain"])
+        .current_dir(workdir)
+        .output()
+        .context("Failed to execute git worktree list command")?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("Failed to list worktrees: {}", stderr);
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let lines: Vec<&str> = stdout.lines().collect();
+    
+    // Parse worktrees and check which branches are merged
+    let main_path = workdir.to_string_lossy().trim_end_matches('/').to_string();
+    let mut merged_worktrees = Vec::new();
+    let mut i = 0;
+    
+    while i < lines.len() {
+        if lines[i].starts_with("worktree ") {
+            let path = lines[i].strip_prefix("worktree ").unwrap_or("");
+            let normalized_path = path.trim_end_matches('/');
+            
+            // Skip main worktree
+            if normalized_path == main_path {
+                i += 1;
+                continue;
+            }
+            
+            // Look for branch info
+            if i + 1 < lines.len() && lines[i + 1].starts_with("HEAD ") {
+                i += 1;
+            }
+            if i + 1 < lines.len() && lines[i + 1].starts_with("branch ") {
+                let branch = lines[i + 1].strip_prefix("branch refs/heads/").unwrap_or("unknown");
+                i += 1;
+                
+                // Check if branch is merged to main
+                let merged_output = Command::new("git")
+                    .args(&["branch", "--merged", "main"])
+                    .current_dir(workdir)
+                    .output();
+                
+                if let Ok(output) = merged_output {
+                    if output.status.success() {
+                        let merged_branches = String::from_utf8_lossy(&output.stdout);
+                        if merged_branches.lines().any(|line| line.trim() == branch || line.trim() == format!("* {}", branch)) {
+                            // Extract worktree name from path
+                            let worktree_name = std::path::Path::new(path)
+                                .file_name()
+                                .and_then(|n| n.to_str())
+                                .unwrap_or(branch)
+                                .to_string();
+                            
+                            // Remove repo name prefix if present
+                            let worktree_name = if worktree_name.starts_with(&format!("{}_", repo_name)) {
+                                worktree_name.strip_prefix(&format!("{}_", repo_name)).unwrap_or(&worktree_name).to_string()
+                            } else {
+                                worktree_name
+                            };
+                            
+                            merged_worktrees.push((path.to_string(), branch.to_string(), worktree_name));
+                        }
+                    }
+                }
+            }
+        }
+        i += 1;
+    }
+    
+    if merged_worktrees.is_empty() {
+        println!("No worktrees to prune");
+        return Ok(());
+    }
+    
+    if dry_run {
+        println!("Would prune {} merged worktree{}:", 
+                 merged_worktrees.len(), 
+                 if merged_worktrees.len() == 1 { "" } else { "s" });
+        for (path, branch, name) in &merged_worktrees {
+            println!("  {} [{}] at {}", name.yellow(), branch.cyan(), path);
+        }
+        return Ok(());
+    }
+    
+    // Show worktrees to be pruned
+    println!("Found {} merged worktree{} to prune:", 
+             merged_worktrees.len(), 
+             if merged_worktrees.len() == 1 { "" } else { "s" });
+    for (path, branch, name) in &merged_worktrees {
+        println!("  {} [{}] at {}", name.yellow(), branch.cyan(), path);
+    }
+    
+    // Ask for confirmation unless --force is used
+    if !force {
+        print!("\nPrune these worktrees? [y/N] ");
+        io::stdout().flush()?;
+        
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+        
+        if !input.trim().eq_ignore_ascii_case("y") {
+            println!("Cancelled");
+            return Ok(());
+        }
+    }
+    
+    // Prune each worktree
+    let pruned_count = merged_worktrees.len();
+    for (path, _, name) in merged_worktrees {
+        print!("Pruning {}... ", name.yellow());
+        
+        let output = Command::new("git")
+            .args(&["worktree", "remove", &path])
+            .current_dir(workdir)
+            .output()
+            .context("Failed to execute git worktree remove command")?;
+        
+        if output.status.success() {
+            println!("{}", "done".green());
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            
+            // Try with --force if it contains uncommitted changes
+            if stderr.contains("contains modified or untracked files") {
+                print!("has uncommitted changes, removing with --force... ");
+                
+                let output = Command::new("git")
+                    .args(&["worktree", "remove", "--force", &path])
+                    .current_dir(workdir)
+                    .output()
+                    .context("Failed to execute git worktree remove command")?;
+                
+                if output.status.success() {
+                    println!("{}", "done".green());
+                } else {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!("{}", "failed".red());
+                    eprintln!("  Error: {}", stderr.trim());
+                }
+            } else {
+                println!("{}", "failed".red());
+                eprintln!("  Error: {}", stderr.trim());
+            }
+        }
+    }
+    
+    println!("\nPruned {} worktree{}", 
+             pruned_count, 
+             if pruned_count == 1 { "" } else { "s" });
+    
+    Ok(())
+}
