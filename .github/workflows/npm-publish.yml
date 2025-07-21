@@ -50,7 +50,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install Rust
+      - name: Install Rust (native)
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-14' || matrix.os == 'windows-latest'
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install Rust (cross-compile)
+        if: matrix.os == 'ubuntu-latest'
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
