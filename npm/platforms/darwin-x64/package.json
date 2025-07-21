@@ -1,0 +1,21 @@
+{
+  "name": "@gwtr/darwin-x64",
+  "version": "0.1.1",
+  "description": "macOS Intel binary for gwtr",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/katsuhirohonda/gwtr.git"
+  },
+  "license": "MIT",
+  "author": "Katsuhiro Honda <freewave3@gmail.com>",
+  "main": "index.js",
+  "files": [
+    "gwtr"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ]
+}
