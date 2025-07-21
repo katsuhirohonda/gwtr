@@ -13,7 +13,6 @@ A simple Git worktree manager that creates worktrees in a consistent location al
 - **Simple Commands**: Easy-to-remember commands for common worktree operations
 - **Colored Output**: Clear, colored terminal output for better readability
 - **Git Integration**: Works seamlessly with existing Git repositories
-- **Quick Navigation**: Switch between worktrees with a simple command
 - **Status Overview**: View all worktrees and their states at a glance
 - **Batch Updates**: Pull latest changes from origin/main to all worktrees
 - **Smart Cleanup**: Automatically remove merged worktrees to keep workspace tidy
@@ -53,9 +52,6 @@ gwtr add feature-x
 # List all worktrees
 gwtr list
 
-# Switch to a worktree (shows cd command)
-gwtr switch feature-x
-
 # Show status of all worktrees
 gwtr status
 
@@ -79,14 +75,12 @@ gwtr remove feature-x
 # In a repository called "myapp"
 $ gwtr add new-feature
 Created worktree 'new-feature' at "../myapp_new-feature"
+cd '/Users/you/dev/myapp_new-feature'
 
 $ gwtr list
 Worktrees:
   /Users/you/dev/myapp (main) [main]
   /Users/you/dev/myapp_new-feature [new-feature]
-
-$ gwtr switch new-feature
-cd /Users/you/dev/myapp_new-feature
 
 $ gwtr status
 Worktrees:

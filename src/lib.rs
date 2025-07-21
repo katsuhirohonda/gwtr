@@ -71,6 +71,7 @@ pub fn create_worktree(repo: &Repository, worktree_name: &str) -> Result<PathBuf
     }
     
     println!("Created worktree '{}' at {:?}", worktree_name, worktree_path);
+    println!("cd '{}'", worktree_path.display());
     
     Ok(worktree_path)
 }
@@ -201,28 +202,6 @@ pub fn remove_worktree(repo: &Repository, worktree_name: &str) -> Result<()> {
     }
     
     println!("Removed worktree '{}' at {:?}", worktree_name, worktree_path);
-    
-    Ok(())
-}
-
-/// Switch to a worktree
-pub fn switch_to_worktree(repo: &Repository, worktree_name: &str) -> Result<()> {
-    let workdir = repo.workdir()
-        .context("Failed to get repository working directory")?;
-    let repo_name = get_repository_name(repo)?;
-    let parent_dir = workdir.parent()
-        .context("Failed to get parent directory of repository")?;
-    
-    // Construct expected worktree path
-    let worktree_path = parent_dir.join(format!("{}_{}", repo_name, worktree_name));
-    
-    // Check if worktree exists
-    if !worktree_path.exists() {
-        bail!("Worktree '{}' not found", worktree_name);
-    }
-    
-    // Print the cd command for the user to run
-    println!("cd {}", worktree_path.display());
     
     Ok(())
 }

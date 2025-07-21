@@ -25,11 +25,6 @@ enum Commands {
         /// Name of the worktree to remove
         name: String,
     },
-    /// Switch to a worktree
-    Switch {
-        /// Name of the worktree to switch to
-        name: String,
-    },
     /// Show status of all worktrees
     Status,
     /// Pull changes in worktrees
@@ -85,14 +80,6 @@ fn run() -> Result<()> {
             
             // Remove worktree
             gwtr::remove_worktree(&repo, name)?;
-        }
-        Some(Commands::Switch { name }) => {
-            // Validate git repository
-            let current_dir = env::current_dir()?;
-            let repo = gwtr::ensure_git_repository(&current_dir)?;
-            
-            // Switch to worktree
-            gwtr::switch_to_worktree(&repo, name)?;
         }
         Some(Commands::Status) => {
             // Validate git repository
