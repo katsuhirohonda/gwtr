@@ -1,0 +1,108 @@
+# gwtr - Git Worktree Manager
+
+[![Crates.io](https://img.shields.io/crates/v/gwtr.svg)](https://crates.io/crates/gwtr)
+[![Documentation](https://docs.rs/gwtr/badge.svg)](https://docs.rs/gwtr)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A simple Git worktree manager that creates worktrees in a consistent location alongside your main repository.
+
+## Features
+
+- **Consistent Naming**: Creates worktrees with the pattern `{repository_name}_{worktree_name}`
+- **Automatic Branch Creation**: Creates a new branch when adding a worktree
+- **Simple Commands**: Easy-to-remember commands for common worktree operations
+- **Colored Output**: Clear, colored terminal output for better readability
+- **Git Integration**: Works seamlessly with existing Git repositories
+
+## How It Works
+
+When you run `gwtr add feature-x` in a repository named `myproject`, it creates a new worktree at `../myproject_feature-x`. This keeps all related worktrees organized at the same directory level as your main repository.
+
+## Installation
+
+### From Crates.io
+
+```bash
+cargo install gwtr
+```
+
+### From Source
+
+```bash
+git clone https://github.com/katsuhirohonda/gwtr.git
+cd gwtr
+cargo install --path .
+```
+
+## Usage
+
+```bash
+# Create a new worktree
+gwtr add feature-x
+
+# List all worktrees
+gwtr list
+
+# Remove a worktree
+gwtr remove feature-x
+```
+
+### Examples
+
+```bash
+# In a repository called "myapp"
+$ gwtr add new-feature
+Created worktree 'new-feature' at "../myapp_new-feature"
+
+$ gwtr list
+Worktrees:
+  /Users/you/dev/myapp (main) [main]
+  /Users/you/dev/myapp_new-feature [new-feature]
+
+$ gwtr remove new-feature
+Removed worktree 'new-feature' at "../myapp_new-feature"
+```
+
+## Prerequisites
+
+- Git 2.5.0 or later (for worktree support)
+- Rust 1.80.0 or later (for building from source)
+
+## Development
+
+This project follows Test-Driven Development (TDD) practices.
+
+```bash
+# Run tests
+cargo test
+
+# Build
+cargo build
+
+# Run with debug output
+cargo run -- --help
+
+# Format code
+cargo fmt
+
+# Run clippy
+cargo clippy
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+Please make sure to:
+- Update tests as appropriate
+- Follow the existing code style
+- Run `cargo fmt` and `cargo clippy` before submitting
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Inspired by Git's worktree feature
+- Built with Rust and the excellent [clap](https://github.com/clap-rs/clap) CLI framework

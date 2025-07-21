@@ -1,0 +1,51 @@
+{
+  "name": "gwtr",
+  "version": "0.1.1",
+  "description": "A simple Git worktree manager",
+  "keywords": [
+    "git",
+    "worktree",
+    "cli",
+    "tool"
+  ],
+  "author": "Katsuhiro Honda <freewave3@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/katsuhirohonda/gwtr.git"
+  },
+  "bugs": {
+    "url": "https://github.com/katsuhirohonda/gwtr/issues"
+  },
+  "homepage": "https://github.com/katsuhirohonda/gwtr#readme",
+  "bin": {
+    "gwtr": "bin/gwtr"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node lib/postinstall.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "optionalDependencies": {
+    "@gwtr/darwin-x64": "0.1.1",
+    "@gwtr/darwin-arm64": "0.1.1",
+    "@gwtr/linux-x64": "0.1.1",
+    "@gwtr/linux-arm64": "0.1.1",
+    "@gwtr/win32-x64": "0.1.1"
+  }
+}
