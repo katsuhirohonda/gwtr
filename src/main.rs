@@ -30,6 +30,8 @@ enum Commands {
         /// Name of the worktree to switch to
         name: String,
     },
+    /// Show status of all worktrees
+    Status,
 }
 
 fn main() {
@@ -74,6 +76,14 @@ fn run() -> Result<()> {
             
             // Switch to worktree
             gwtr::switch_to_worktree(&repo, name)?;
+        }
+        Some(Commands::Status) => {
+            // Validate git repository
+            let current_dir = env::current_dir()?;
+            let repo = gwtr::ensure_git_repository(&current_dir)?;
+            
+            // Show worktrees status
+            gwtr::show_worktrees_status(&repo)?;
         }
         None => {
             // This shouldn't happen with arg_required_else_help

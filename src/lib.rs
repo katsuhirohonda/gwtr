@@ -226,3 +226,89 @@ pub fn switch_to_worktree(repo: &Repository, worktree_name: &str) -> Result<()> 
     
     Ok(())
 }
+
+/// Show status of all worktrees
+pub fn show_worktrees_status(repo: &Repository) -> Result<()> {
+    use std::process::Command;
+    
+    let workdir = repo.workdir()
+        .context("Failed to get repository working directory")?;
+    
+    // Get list of worktrees
+    let output = Command::new("git")
+        .args(&["worktree", "list", "--porcelain"])
+        .current_dir(workdir)
+        .output()
+        .context("Failed to execute git worktree list command")?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("Failed to list worktrees: {}", stderr);
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let lines: Vec<&str> = stdout.lines().collect();
+    
+    // Parse worktrees
+    let mut worktrees = Vec::new();
+    let mut i = 0;
+    while i < lines.len() {
+        if lines[i].starts_with("worktree ") {
+            let path = lines[i].strip_prefix("worktree ").unwrap_or("");
+            let mut branch = "detached";
+            
+            // Look for branch info
+            if i + 1 < lines.len() && lines[i + 1].starts_with("HEAD ") {
+                i += 1;
+            }
+            if i + 1 < lines.len() && lines[i + 1].starts_with("branch ") {
+                branch = lines[i + 1].strip_prefix("branch refs/heads/").unwrap_or("unknown");
+                i += 1;
+            }
+            
+            worktrees.push((path.to_string(), branch.to_string()));
+        }
+        i += 1;
+    }
+    
+    // Display worktrees with status
+    println!("{}", "Worktrees:".bold());
+    let main_path = workdir.to_string_lossy().trim_end_matches('/').to_string();
+    
+    for (path, branch) in worktrees {
+        let normalized_path = path.trim_end_matches('/');
+        let is_main = normalized_path == main_path;
+        
+        // Check for uncommitted changes
+        let status_output = Command::new("git")
+            .args(&["status", "--porcelain"])
+            .current_dir(&path)
+            .output();
+        
+        let status_msg = if let Ok(output) = status_output {
+            if output.status.success() {
+                let status_str = String::from_utf8_lossy(&output.stdout);
+                if status_str.trim().is_empty() {
+                    "clean".green().to_string()
+                } else {
+                    let change_count = status_str.lines().count();
+                    format!("{} uncommitted changes", change_count).yellow().to_string()
+                }
+            } else {
+                "unknown".red().to_string()
+            }
+        } else {
+            "error".red().to_string()
+        };
+        
+        let display_path = if is_main {
+            format!("{} (main)", path).green()
+        } else {
+            path.yellow()
+        };
+        
+        println!("  {} [{}] - {}", display_path, branch.cyan(), status_msg);
+    }
+    
+    Ok(())
+}
