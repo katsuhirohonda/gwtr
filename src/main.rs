@@ -32,6 +32,14 @@ enum Commands {
     },
     /// Show status of all worktrees
     Status,
+    /// Pull changes in worktrees
+    Pull {
+        /// Pull all worktrees
+        #[arg(long, short)]
+        all: bool,
+        /// Specific worktree name to pull (optional)
+        name: Option<String>,
+    },
 }
 
 fn main() {
@@ -84,6 +92,21 @@ fn run() -> Result<()> {
             
             // Show worktrees status
             gwtr::show_worktrees_status(&repo)?;
+        }
+        Some(Commands::Pull { all, name }) => {
+            // Validate git repository
+            let current_dir = env::current_dir()?;
+            let repo = gwtr::ensure_git_repository(&current_dir)?;
+            
+            // Pull worktrees
+            if *all {
+                gwtr::pull_all_worktrees(&repo)?;
+            } else if let Some(worktree_name) = name {
+                gwtr::pull_worktree(&repo, worktree_name)?;
+            } else {
+                // Pull current worktree
+                gwtr::pull_current_worktree(&repo)?;
+            }
         }
         None => {
             // This shouldn't happen with arg_required_else_help

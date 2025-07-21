@@ -312,3 +312,189 @@ pub fn show_worktrees_status(repo: &Repository) -> Result<()> {
     
     Ok(())
 }
+
+/// Pull changes in all worktrees
+pub fn pull_all_worktrees(repo: &Repository) -> Result<()> {
+    use std::process::Command;
+    
+    let workdir = repo.workdir()
+        .context("Failed to get repository working directory")?;
+    
+    println!("Pulling all worktrees from origin/main...");
+    
+    // Get list of worktrees
+    let output = Command::new("git")
+        .args(&["worktree", "list", "--porcelain"])
+        .current_dir(workdir)
+        .output()
+        .context("Failed to execute git worktree list command")?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("Failed to list worktrees: {}", stderr);
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let lines: Vec<&str> = stdout.lines().collect();
+    
+    // Parse worktree paths
+    let mut worktree_paths = Vec::new();
+    let mut i = 0;
+    while i < lines.len() {
+        if lines[i].starts_with("worktree ") {
+            let path = lines[i].strip_prefix("worktree ").unwrap_or("");
+            let mut branch = "detached";
+            
+            // Look for branch info
+            if i + 1 < lines.len() && lines[i + 1].starts_with("HEAD ") {
+                i += 1;
+            }
+            if i + 1 < lines.len() && lines[i + 1].starts_with("branch ") {
+                branch = lines[i + 1].strip_prefix("branch refs/heads/").unwrap_or("unknown");
+                i += 1;
+            }
+            
+            worktree_paths.push((path.to_string(), branch.to_string()));
+        }
+        i += 1;
+    }
+    
+    // Pull origin/main in each worktree
+    let main_path = workdir.to_string_lossy().trim_end_matches('/').to_string();
+    
+    for (path, branch) in worktree_paths {
+        let normalized_path = path.trim_end_matches('/');
+        let is_main = normalized_path == main_path;
+        
+        let worktree_name = if is_main {
+            "main".to_string()
+        } else {
+            // Extract worktree name from path
+            std::path::Path::new(&path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(&branch)
+                .to_string()
+        };
+        
+        print!("  {} [{}]: ", worktree_name.yellow(), branch.cyan());
+        
+        // Pull from origin/main
+        let pull_output = Command::new("git")
+            .args(&["pull", "origin", "main"])
+            .current_dir(&path)
+            .output();
+        
+        match pull_output {
+            Ok(output) => {
+                if output.status.success() {
+                    let stdout = String::from_utf8_lossy(&output.stdout);
+                    if stdout.contains("Already up to date") || stdout.contains("Already up-to-date") {
+                        println!("{}", "Already up to date".green());
+                    } else {
+                        println!("{}", "Updated".green());
+                    }
+                } else {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    if stderr.contains("Could not find remote") || stderr.contains("fatal: 'origin' does not appear to be a git repository") {
+                        println!("{}: No remote configured", "Skipped".yellow());
+                    } else {
+                        println!("{}: {}", "Failed".red(), stderr.trim());
+                    }
+                }
+            }
+            Err(e) => {
+                println!("{}: {}", "Error".red(), e);
+            }
+        }
+    }
+    
+    Ok(())
+}
+
+/// Pull changes in a specific worktree
+pub fn pull_worktree(repo: &Repository, worktree_name: &str) -> Result<()> {
+    use std::process::Command;
+    
+    let workdir = repo.workdir()
+        .context("Failed to get repository working directory")?;
+    let repo_name = get_repository_name(repo)?;
+    let parent_dir = workdir.parent()
+        .context("Failed to get parent directory of repository")?;
+    
+    // Check if pulling main worktree
+    let worktree_path = if worktree_name == "main" {
+        workdir.to_path_buf()
+    } else {
+        // Construct expected worktree path
+        let path = parent_dir.join(format!("{}_{}", repo_name, worktree_name));
+        
+        // Check if worktree exists
+        if !path.exists() {
+            bail!("Worktree '{}' not found", worktree_name);
+        }
+        path
+    };
+    
+    println!("Pulling worktree '{}' from origin/main...", worktree_name);
+    
+    // Execute git pull from origin/main
+    let output = Command::new("git")
+        .args(&["pull", "origin", "main"])
+        .current_dir(&worktree_path)
+        .output()
+        .context("Failed to execute git pull command")?;
+    
+    if output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        if stdout.contains("Already up to date") || stdout.contains("Already up-to-date") {
+            println!("{}: {}", worktree_name.yellow(), "Already up to date".green());
+        } else {
+            println!("{}: {}", worktree_name.yellow(), "Updated".green());
+        }
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if stderr.contains("Could not find remote") || stderr.contains("fatal: 'origin' does not appear to be a git repository") {
+            bail!("No remote 'origin' configured");
+        } else {
+            bail!("Failed to pull worktree '{}': {}", worktree_name, stderr);
+        }
+    }
+    
+    Ok(())
+}
+
+/// Pull changes in the current worktree
+pub fn pull_current_worktree(repo: &Repository) -> Result<()> {
+    use std::process::Command;
+    
+    let workdir = repo.workdir()
+        .context("Failed to get repository working directory")?;
+    
+    println!("Pulling current worktree from origin/main...");
+    
+    // Execute git pull from origin/main
+    let output = Command::new("git")
+        .args(&["pull", "origin", "main"])
+        .current_dir(workdir)
+        .output()
+        .context("Failed to execute git pull command")?;
+    
+    if output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        if stdout.contains("Already up to date") || stdout.contains("Already up-to-date") {
+            println!("{}", "Already up to date".green());
+        } else {
+            println!("{}", "Updated".green());
+        }
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if stderr.contains("Could not find remote") || stderr.contains("fatal: 'origin' does not appear to be a git repository") {
+            bail!("No remote 'origin' configured");
+        } else {
+            bail!("Failed to pull: {}", stderr);
+        }
+    }
+    
+    Ok(())
+}
