@@ -146,8 +146,6 @@ This project uses GitHub Actions for automated releases:
 - **crates.io**: Automatically published when a GitHub release is created
 - **npm**: Automatically published with pre-compiled binaries for all platforms
 
-See [docs/CRATES_PUBLISHING.md](docs/CRATES_PUBLISHING.md) for details.
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
