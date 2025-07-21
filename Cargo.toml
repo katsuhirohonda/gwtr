@@ -2,10 +2,10 @@
 name = "gwtr"
 version = "0.1.0"
 edition = "2024"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Katsuhiro Honda <freewave3@gmail.com>"]
 description = "A simple Git worktree manager"
 license = "MIT"
-repository = "https://github.com/yourusername/gwtr"
+repository = "https://github.com/katsuhirohonda/gwtr"
 readme = "README.md"
 keywords = ["git", "worktree", "cli", "tool"]
 categories = ["command-line-utilities", "development-tools"]

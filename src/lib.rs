@@ -131,8 +131,13 @@ pub fn list_worktrees(repo: &Repository) -> Result<()> {
     
     // Display worktrees
     println!("{}", "Worktrees:".bold());
+    let main_path = workdir.to_string_lossy().trim_end_matches('/').to_string();
+    
     for (path, branch, is_bare) in worktrees {
-        let display_path = if path == workdir.to_string_lossy() {
+        let normalized_path = path.trim_end_matches('/');
+        let is_main = normalized_path == main_path;
+        
+        let display_path = if is_main {
             format!("{} (main)", path).green()
         } else {
             path.yellow()
