@@ -1,0 +1,150 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 0.1.2)'
+        required: true
+        type: string
+
+jobs:
+  build-binaries:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # macOS Intel
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            npm_platform: darwin-x64
+            binary_name: gwtr
+          
+          # macOS Apple Silicon
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            npm_platform: darwin-arm64
+            binary_name: gwtr
+          
+          # Linux x64
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            npm_platform: linux-x64
+            binary_name: gwtr
+          
+          # Linux ARM64
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            npm_platform: linux-arm64
+            binary_name: gwtr
+          
+          # Windows x64
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            npm_platform: win32-x64
+            binary_name: gwtr.exe
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
+      - name: Install cross-compilation tools
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+      
+      - name: Build binary
+        run: cargo build --release --target ${{ matrix.target }}
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+      
+      - name: Create platform directory
+        run: mkdir -p npm/platforms/${{ matrix.npm_platform }}
+      
+      - name: Copy binary
+        run: |
+          cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} npm/platforms/${{ matrix.npm_platform }}/
+      
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.npm_platform }}
+          path: npm/platforms/${{ matrix.npm_platform }}/${{ matrix.binary_name }}
+
+  publish:
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: binary-*
+          path: npm/platforms
+      
+      - name: Fix binary paths
+        run: |
+          # Move binaries to correct locations
+          for platform in darwin-x64 darwin-arm64 linux-x64 linux-arm64 win32-x64; do
+            if [ -d "npm/platforms/binary-$platform" ]; then
+              mv npm/platforms/binary-$platform/* npm/platforms/$platform/
+              rmdir npm/platforms/binary-$platform
+            fi
+          done
+      
+      - name: Make binaries executable
+        run: |
+          chmod +x npm/platforms/darwin-x64/gwtr || true
+          chmod +x npm/platforms/darwin-arm64/gwtr || true
+          chmod +x npm/platforms/linux-x64/gwtr || true
+          chmod +x npm/platforms/linux-arm64/gwtr || true
+      
+      - name: Update version
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          # Update main package
+          cd npm && npm version $VERSION --no-git-tag-version
+          # Update platform packages
+          for platform in platforms/*; do
+            if [ -d "$platform" ]; then
+              cd $platform && npm version $VERSION --no-git-tag-version && cd ../..
+            fi
+          done
+      
+      - name: Publish platform packages
+        run: |
+          cd npm
+          # Publish each platform package
+          for platform in platforms/*; do
+            if [ -d "$platform" ]; then
+              echo "Publishing $platform..."
+              cd $platform && npm publish --access public && cd ../..
+            fi
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Publish main package
+        run: |
+          cd npm && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
