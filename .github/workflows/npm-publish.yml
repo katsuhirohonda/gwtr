@@ -77,6 +77,7 @@ jobs:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
       
       - name: Create platform directory
+        shell: bash
         run: mkdir -p npm/platforms/${{ matrix.npm_platform }}
       
       - name: Copy binary (native)
@@ -117,6 +118,7 @@ jobs:
           path: npm/platforms
       
       - name: Fix binary paths
+        shell: bash
         run: |
           # Move binaries to correct locations
           for platform in darwin-x64 darwin-arm64 linux-x64 linux-arm64 win32-x64; do
@@ -127,6 +129,7 @@ jobs:
           done
       
       - name: Make binaries executable
+        shell: bash
         run: |
           chmod +x npm/platforms/darwin-x64/gwtr || true
           chmod +x npm/platforms/darwin-arm64/gwtr || true
@@ -135,6 +138,7 @@ jobs:
       
       - name: Update version
         if: github.event_name == 'workflow_dispatch'
+        shell: bash
         run: |
           VERSION=${{ github.event.inputs.version }}
           # Update main package
@@ -147,6 +151,7 @@ jobs:
           done
       
       - name: Publish platform packages
+        shell: bash
         run: |
           cd npm
           # Publish each platform package
@@ -160,6 +165,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Publish main package
+        shell: bash
         run: |
           cd npm && npm publish --access public
         env:
