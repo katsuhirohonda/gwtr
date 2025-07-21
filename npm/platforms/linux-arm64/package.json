@@ -1,6 +1,6 @@
 {
   "name": "gwtr-linux-arm64",
-  "version": "0.3.1",
+  "version": "0.3.12",
   "description": "Linux ARM64 binary for gwtr",
   "repository": {
     "type": "git",
