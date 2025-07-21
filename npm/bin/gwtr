@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+
+const { execFileSync } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+function getBinaryName() {
+  const platform = process.platform;
+  const arch = process.arch;
+
+  if (platform === 'win32') {
+    return 'gwtr.exe';
+  }
+  return 'gwtr';
+}
+
+function getBinaryPath() {
+  const platform = process.platform;
+  const arch = process.arch;
+  
+  // Map Node.js platform/arch to our package naming
+  const platformArch = `${platform}-${arch}`;
+  
+  // Try to find the binary in the platform-specific package
+  const packageName = `@gwtr/${platformArch}`;
+  
+  try {
+    const packagePath = require.resolve(`${packageName}/package.json`);
+    const packageDir = path.dirname(packagePath);
+    const binaryPath = path.join(packageDir, getBinaryName());
+    
+    if (fs.existsSync(binaryPath)) {
+      return binaryPath;
+    }
+  } catch (e) {
+    // Package not found, continue to fallback
+  }
+  
+  // Fallback to local binary (for development)
+  const localBinary = path.join(__dirname, '..', 'binaries', platformArch, getBinaryName());
+  if (fs.existsSync(localBinary)) {
+    return localBinary;
+  }
+  
+  throw new Error(`gwtr binary not found for platform: ${platformArch}`);
+}
+
+try {
+  const binaryPath = getBinaryPath();
+  
+  // Pass through all arguments to the binary
+  const args = process.argv.slice(2);
+  
+  // Execute the binary with inherited stdio
+  execFileSync(binaryPath, args, {
+    stdio: 'inherit',
+    env: process.env
+  });
+} catch (error) {
+  if (error.code === 'ENOENT') {
+    console.error('Error: gwtr binary not found for your platform.');
+    console.error('Please try reinstalling the package.');
+    process.exit(1);
+  } else if (error.status !== undefined) {
+    // The binary executed but returned a non-zero exit code
+    process.exit(error.status);
+  } else {
+    console.error('Error executing gwtr:', error.message);
+    process.exit(1);
+  }
+}
