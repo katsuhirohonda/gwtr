@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use git2::{Repository, BranchType};
+use git2::Repository;
 use std::path::{Path, PathBuf};
 use colored::*;
 

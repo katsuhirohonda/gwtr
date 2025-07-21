@@ -29,8 +29,11 @@ fn test_list_shows_no_worktrees_initially() {
             String::from_utf8_lossy(&output.stderr));
     
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("No worktrees found") || stdout.contains("main"), 
-            "Should indicate no worktrees or show only main");
+    assert!(stdout.contains("Worktrees:"), 
+            "Should show worktrees header. Actual output: {}", stdout);
+    // Main repository shows with branch name in brackets
+    assert!(stdout.contains("[master]") || stdout.contains("[main]"), 
+            "Should show main repository with branch. Actual output: {}", stdout);
 }
 
 #[test]

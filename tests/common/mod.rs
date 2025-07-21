@@ -4,7 +4,7 @@ use tempfile::TempDir;
 
 /// Helper struct for running gwtr commands in tests
 pub struct TestHelper {
-    pub temp_dir: TempDir,
+    _temp_dir: TempDir,  // Keeps the directory alive until dropped
     pub repo_path: PathBuf,
 }
 
@@ -20,7 +20,7 @@ impl TestHelper {
             .current_dir(&repo_path)
             .output()?;
         
-        Ok(Self { temp_dir, repo_path })
+        Ok(Self { _temp_dir: temp_dir, repo_path })
     }
     
     /// Run gwtr command with arguments
@@ -30,12 +30,5 @@ impl TestHelper {
             .current_dir(&self.repo_path)
             .output()
             .expect("Failed to execute gwtr")
-    }
-    
-    /// Run gwtr command and return stdout as string
-    pub fn run_gwtr_success(&self, args: &[&str]) -> String {
-        let output = self.run_gwtr(args);
-        assert!(output.status.success(), "Command failed: {:?}", output);
-        String::from_utf8_lossy(&output.stdout).to_string()
     }
 }
