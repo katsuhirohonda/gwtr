@@ -10,6 +10,14 @@ readme = "README.md"
 keywords = ["git", "worktree", "cli", "tool"]
 categories = ["command-line-utilities", "development-tools"]
 
+[lib]
+name = "gwtr"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gwtr"
+path = "src/main.rs"
+
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 git2 = "0.19"
@@ -17,3 +25,6 @@ anyhow = "1.0"
 colored = "2.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+[dev-dependencies]
+tempfile = "3.13"
