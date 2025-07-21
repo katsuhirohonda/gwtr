@@ -19,13 +19,13 @@ jobs:
         include:
           # macOS Intel
           - target: x86_64-apple-darwin
-            os: macos-latest
+            os: macos-13
             npm_platform: darwin-x64
             binary_name: gwtr
           
           # macOS Apple Silicon
           - target: aarch64-apple-darwin
-            os: macos-latest
+            os: macos-14
             npm_platform: darwin-arm64
             binary_name: gwtr
           
@@ -61,7 +61,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu
       
-      - name: Build binary
+      - name: Build binary (native)
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-14' || matrix.os == 'windows-latest'
+        run: cargo build --release
+      
+      - name: Build binary (cross-compile)
+        if: matrix.os == 'ubuntu-latest'
         run: cargo build --release --target ${{ matrix.target }}
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
@@ -69,7 +74,13 @@ jobs:
       - name: Create platform directory
         run: mkdir -p npm/platforms/${{ matrix.npm_platform }}
       
-      - name: Copy binary
+      - name: Copy binary (native)
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-14' || matrix.os == 'windows-latest'
+        run: |
+          cp target/release/${{ matrix.binary_name }} npm/platforms/${{ matrix.npm_platform }}/
+      
+      - name: Copy binary (cross-compile)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} npm/platforms/${{ matrix.npm_platform }}/
       
