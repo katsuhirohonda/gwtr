@@ -1,7 +1,6 @@
 # gwtr - Git Worktree Manager
 
-[![Crates.io](https://img.shields.io/crates/v/gwtr.svg)](https://crates.io/crates/gwtr)
-[![Documentation](https://docs.rs/gwtr/badge.svg)](https://docs.rs/gwtr)
+[![npm version](https://img.shields.io/npm/v/gwtr.svg)](https://www.npmjs.com/package/gwtr)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A simple Git worktree manager that creates worktrees in a consistent location alongside your main repository.
@@ -20,18 +19,18 @@ When you run `gwtr add feature-x` in a repository named `myproject`, it creates 
 
 ## Installation
 
-### From Crates.io
-
 ```bash
-cargo install gwtr
+npm install -g gwtr
 ```
 
-### From Source
+Or using other package managers:
 
 ```bash
-git clone https://github.com/katsuhirohonda/gwtr.git
-cd gwtr
-cargo install --path .
+# Using yarn
+yarn global add gwtr
+
+# Using pnpm
+pnpm add -g gwtr
 ```
 
 ## Usage
@@ -66,28 +65,18 @@ Removed worktree 'new-feature' at "../myapp_new-feature"
 ## Prerequisites
 
 - Git 2.5.0 or later (for worktree support)
-- Rust 1.80.0 or later (for building from source)
+- Node.js 14.0.0 or later
 
-## Development
+## Supported Platforms
 
-This project follows Test-Driven Development (TDD) practices.
+- macOS (Intel & Apple Silicon)
+- Linux (x64 & ARM64)
+- Windows (x64)
 
-```bash
-# Run tests
-cargo test
+## Source Code
 
-# Build
-cargo build
-
-# Run with debug output
-cargo run -- --help
-
-# Format code
-cargo fmt
-
-# Run clippy
-cargo clippy
-```
+This is the npm distribution of gwtr. The source code is written in Rust and available at:
+https://github.com/katsuhirohonda/gwtr
 
 ## Contributing
 
