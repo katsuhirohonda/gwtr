@@ -147,3 +147,55 @@ pub fn list_worktrees(repo: &Repository) -> Result<()> {
     
     Ok(())
 }
+
+/// Remove a worktree
+pub fn remove_worktree(repo: &Repository, worktree_name: &str) -> Result<()> {
+    use std::process::Command;
+    
+    let workdir = repo.workdir()
+        .context("Failed to get repository working directory")?;
+    let repo_name = get_repository_name(repo)?;
+    let parent_dir = workdir.parent()
+        .context("Failed to get parent directory of repository")?;
+    
+    // Construct expected worktree path
+    let worktree_path = parent_dir.join(format!("{}_{}", repo_name, worktree_name));
+    
+    // Check if worktree exists
+    if !worktree_path.exists() {
+        bail!("Worktree '{}' not found at {:?}", worktree_name, worktree_path);
+    }
+    
+    // Use git worktree remove command
+    let output = Command::new("git")
+        .args(&["worktree", "remove", worktree_path.to_str().unwrap()])
+        .current_dir(workdir)
+        .output()
+        .context("Failed to execute git worktree remove command")?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        
+        // Try with --force if it contains uncommitted changes
+        if stderr.contains("contains modified or untracked files") {
+            println!("Worktree contains uncommitted changes, removing with --force");
+            
+            let output = Command::new("git")
+                .args(&["worktree", "remove", "--force", worktree_path.to_str().unwrap()])
+                .current_dir(workdir)
+                .output()
+                .context("Failed to execute git worktree remove command")?;
+            
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                bail!("Failed to remove worktree: {}", stderr);
+            }
+        } else {
+            bail!("Failed to remove worktree: {}", stderr);
+        }
+    }
+    
+    println!("Removed worktree '{}' at {:?}", worktree_name, worktree_path);
+    
+    Ok(())
+}

@@ -54,13 +54,13 @@ fn run() -> Result<()> {
             // List worktrees
             gwtr::list_worktrees(&repo)?;
         }
-        Some(Commands::Remove { name: _ }) => {
+        Some(Commands::Remove { name }) => {
             // Validate git repository
             let current_dir = env::current_dir()?;
-            let _repo = gwtr::ensure_git_repository(&current_dir)?;
+            let repo = gwtr::ensure_git_repository(&current_dir)?;
             
-            // Will implement later
-            println!("Remove command not yet implemented");
+            // Remove worktree
+            gwtr::remove_worktree(&repo, name)?;
         }
         None => {
             // This shouldn't happen with arg_required_else_help
