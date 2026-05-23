@@ -1,6 +1,8 @@
 use anyhow::Result;
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use clap_complete::{Shell, generate};
 use std::env;
+use std::io;
 
 /// A simple Git worktree manager
 #[derive(Parser)]
@@ -43,6 +45,11 @@ enum Commands {
         /// Skip confirmation prompt
         #[arg(long, short)]
         force: bool,
+    },
+    /// Generate shell completion script
+    Completions {
+        /// Shell to generate completions for (zsh, bash, fish, powershell, elvish)
+        shell: Shell,
     },
 }
 
@@ -111,6 +118,11 @@ fn run() -> Result<()> {
 
             // Prune merged worktrees
             gwtr::prune_merged_worktrees(&repo, *dry_run, *force)?;
+        }
+        Some(Commands::Completions { shell }) => {
+            let mut cmd = Cli::command();
+            let bin_name = cmd.get_name().to_string();
+            generate(*shell, &mut cmd, bin_name, &mut io::stdout());
         }
         None => {
             // This shouldn't happen with arg_required_else_help

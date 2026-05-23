@@ -67,7 +67,34 @@ gwtr prune --force       # Skip confirmation
 
 # Remove a specific worktree
 gwtr remove feature-x
+
+# Generate shell completion script
+gwtr completions zsh
+gwtr completions bash
 ```
+
+### Shell Completions
+
+`gwtr` can generate completion scripts for your shell. Supported shells: `zsh`, `bash`, `fish`, `powershell`, `elvish`.
+
+#### zsh
+
+```bash
+# Generate the script into a directory on your $fpath
+gwtr completions zsh > ~/.zsh/completions/_gwtr
+
+# Make sure that directory is on $fpath in ~/.zshrc, then reload
+autoload -U compinit && compinit
+```
+
+#### bash
+
+```bash
+# Source the generated script from ~/.bashrc
+echo 'source <(gwtr completions bash)' >> ~/.bashrc
+```
+
+After installing, try `gwtr <TAB>` to see subcommands, or `gwtr prune --<TAB>` to see option flags.
 
 ### Examples
 
