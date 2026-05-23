@@ -1,10 +1,10 @@
-use std::process::Command;
 use std::path::PathBuf;
+use std::process::Command;
 use tempfile::TempDir;
 
 /// Helper struct for running gwtr commands in tests
 pub struct TestHelper {
-    _temp_dir: TempDir,  // Keeps the directory alive until dropped
+    _temp_dir: TempDir, // Keeps the directory alive until dropped
     pub repo_path: PathBuf,
 }
 
@@ -13,16 +13,19 @@ impl TestHelper {
     pub fn new() -> anyhow::Result<Self> {
         let temp_dir = TempDir::new()?;
         let repo_path = temp_dir.path().to_path_buf();
-        
+
         // Initialize git repository
         Command::new("git")
-            .args(&["init"])
+            .args(["init"])
             .current_dir(&repo_path)
             .output()?;
-        
-        Ok(Self { _temp_dir: temp_dir, repo_path })
+
+        Ok(Self {
+            _temp_dir: temp_dir,
+            repo_path,
+        })
     }
-    
+
     /// Run gwtr command with arguments
     pub fn run_gwtr(&self, args: &[&str]) -> std::process::Output {
         Command::new(env!("CARGO_BIN_EXE_gwtr"))

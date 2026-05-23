@@ -55,13 +55,13 @@ fn main() {
 
 fn run() -> Result<()> {
     let cli = Cli::parse();
-    
+
     match &cli.command {
         Some(Commands::Add { name }) => {
             // Validate git repository
             let current_dir = env::current_dir()?;
             let repo = gwtr::ensure_git_repository(&current_dir)?;
-            
+
             // Create worktree
             gwtr::create_worktree(&repo, name)?;
         }
@@ -69,7 +69,7 @@ fn run() -> Result<()> {
             // Validate git repository
             let current_dir = env::current_dir()?;
             let repo = gwtr::ensure_git_repository(&current_dir)?;
-            
+
             // List worktrees
             gwtr::list_worktrees(&repo)?;
         }
@@ -77,7 +77,7 @@ fn run() -> Result<()> {
             // Validate git repository
             let current_dir = env::current_dir()?;
             let repo = gwtr::ensure_git_repository(&current_dir)?;
-            
+
             // Remove worktree
             gwtr::remove_worktree(&repo, name)?;
         }
@@ -85,7 +85,7 @@ fn run() -> Result<()> {
             // Validate git repository
             let current_dir = env::current_dir()?;
             let repo = gwtr::ensure_git_repository(&current_dir)?;
-            
+
             // Show worktrees status
             gwtr::show_worktrees_status(&repo)?;
         }
@@ -93,7 +93,7 @@ fn run() -> Result<()> {
             // Validate git repository
             let current_dir = env::current_dir()?;
             let repo = gwtr::ensure_git_repository(&current_dir)?;
-            
+
             // Pull worktrees
             if *all {
                 gwtr::pull_all_worktrees(&repo)?;
@@ -108,7 +108,7 @@ fn run() -> Result<()> {
             // Validate git repository
             let current_dir = env::current_dir()?;
             let repo = gwtr::ensure_git_repository(&current_dir)?;
-            
+
             // Prune merged worktrees
             gwtr::prune_merged_worktrees(&repo, *dry_run, *force)?;
         }
@@ -116,6 +116,6 @@ fn run() -> Result<()> {
             // This shouldn't happen with arg_required_else_help
         }
     }
-    
+
     Ok(())
 }
