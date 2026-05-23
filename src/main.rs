@@ -46,6 +46,24 @@ enum Commands {
         #[arg(long, short)]
         force: bool,
     },
+    /// Add or show a note for a worktree
+    Note {
+        /// Name of the worktree
+        name: String,
+        /// Note text to save
+        text: Option<String>,
+        /// External reference (e.g. JIRA-123, GitHub issue URL)
+        #[arg(long)]
+        ref_: Option<String>,
+    },
+    /// Show context of worktrees for AI
+    Context {
+        /// Name of the worktree (optional, shows all if omitted)
+        name: Option<String>,
+        /// Save context to a file (.gwtr-context.md)
+        #[arg(long)]
+        save: bool,
+    },
     /// Generate shell completion script
     Completions {
         /// Shell to generate completions for (zsh, bash, fish, powershell, elvish)
@@ -118,6 +136,16 @@ fn run() -> Result<()> {
 
             // Prune merged worktrees
             gwtr::prune_merged_worktrees(&repo, *dry_run, *force)?;
+        }
+        Some(Commands::Note { name, text, ref_ }) => {
+            let current_dir = env::current_dir()?;
+            let repo = gwtr::ensure_git_repository(&current_dir)?;
+            gwtr::manage_note(&repo, name, text.as_deref(), ref_.as_deref())?;
+        }
+        Some(Commands::Context { name, save }) => {
+            let current_dir = env::current_dir()?;
+            let repo = gwtr::ensure_git_repository(&current_dir)?;
+            gwtr::show_context(&repo, name.as_deref(), *save)?;
         }
         Some(Commands::Completions { shell }) => {
             let mut cmd = Cli::command();
