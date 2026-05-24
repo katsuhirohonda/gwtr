@@ -16,6 +16,7 @@ A simple Git worktree manager that creates worktrees in a consistent location al
 - **Status Overview**: View all worktrees and their states at a glance
 - **Batch Updates**: Pull latest changes from origin/main to all worktrees
 - **Smart Cleanup**: Automatically remove merged worktrees to keep workspace tidy
+- **Supply Chain Audit**: Detect vulnerabilities and typosquatting across all worktrees
 
 ## How It Works
 
@@ -67,6 +68,11 @@ gwtr prune --force       # Skip confirmation
 
 # Remove a specific worktree
 gwtr remove feature-x
+
+# Audit dependencies for supply chain attacks
+gwtr audit              # Current worktree (cargo audit + typosquatting check)
+gwtr audit --all        # All worktrees
+gwtr audit --typo-only  # Typosquatting check only (no network required)
 
 # Generate shell completion script
 gwtr completions zsh
@@ -130,7 +136,40 @@ Pruned 1 worktree
 
 $ gwtr remove new-feature
 Removed worktree 'new-feature' at "../myapp_new-feature"
+
+$ gwtr audit --all
+====== gwtr audit --all ======
+
+=== worktree: myapp (main) ===
+  Packages: 126
+  [Vulnerability Check (cargo audit)]
+    No vulnerabilities found
+  [Typosquatting Check]
+    OK  No suspicious package names found
+
+=== worktree: myapp_feature-x (feature-x) ===
+  Packages: 130
+  [Vulnerability Check (cargo audit)]
+    error[vulnerability]: Vulnerable crate: openssl 0.10.55
+  [Typosquatting Check]
+    WARN reqest 0.11.0 - similar to "reqwest" (distance: 1)
+
+====== Summary ======
+Worktrees scanned: 2
+Typosquatting warnings: 1
+Vulnerability errors:   1
 ```
+
+### Supply Chain Audit
+
+`gwtr audit` helps protect your Rust projects from supply chain attacks by combining two checks:
+
+1. **Vulnerability Check** — wraps [`cargo audit`](https://crates.io/crates/cargo-audit) to detect known CVEs in your dependencies via the [RustSec Advisory Database](https://rustsec.org/)
+2. **Typosquatting Detection** — compares every dependency name against a list of popular crates, flagging names that are suspiciously similar (e.g. `reqest` vs `reqwest`)
+
+The `--all` flag scans every worktree in one pass, making it easy to audit an entire feature branch portfolio at once.
+
+> **Note**: `cargo audit` must be installed separately (`cargo install cargo-audit`). If it is not found, the vulnerability check is skipped and only typosquatting detection runs.
 
 ## Prerequisites
 

@@ -1,6 +1,6 @@
 [package]
 name = "gwtr"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 authors = ["Katsuhiro Honda <freewave3@gmail.com>"]
 description = "A simple Git worktree manager"
@@ -26,6 +26,8 @@ anyhow = "1.0"
 colored = "2.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+toml = "0.8"
+strsim = "0.11"
 
 [dev-dependencies]
 tempfile = "3.13"

@@ -64,6 +64,15 @@ enum Commands {
         #[arg(long)]
         save: bool,
     },
+    /// Audit dependencies for supply chain attacks
+    Audit {
+        /// Only run typosquatting detection (skips cargo audit)
+        #[arg(long)]
+        typo_only: bool,
+        /// Run audit on all worktrees
+        #[arg(long, short)]
+        all: bool,
+    },
     /// Generate shell completion script
     Completions {
         /// Shell to generate completions for (zsh, bash, fish, powershell, elvish)
@@ -146,6 +155,10 @@ fn run() -> Result<()> {
             let current_dir = env::current_dir()?;
             let repo = gwtr::ensure_git_repository(&current_dir)?;
             gwtr::show_context(&repo, name.as_deref(), *save)?;
+        }
+        Some(Commands::Audit { typo_only, all }) => {
+            let current_dir = env::current_dir()?;
+            gwtr::run_audit(&current_dir, *typo_only, *all)?;
         }
         Some(Commands::Completions { shell }) => {
             let mut cmd = Cli::command();

@@ -1,3 +1,6 @@
+pub mod audit;
+pub use audit::run_audit;
+
 use anyhow::{Context, Result, bail};
 use colored::*;
 use git2::Repository;
